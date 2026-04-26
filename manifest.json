@@ -1,0 +1,19 @@
+{
+	"manifest_version": 3,
+	"name": "__MSG_extName__",
+	"version": "0.1.0",
+	"description": "__MSG_extDescription__",
+	"default_locale": "zh_TW",
+	"homepage_url": "https://github.com/BoringMan314/bm-ani-gamer-cover-image-fix",
+	"icons": {
+		"128": "icons/icon.png"
+	},
+	"content_scripts": [
+		{
+			"matches": ["https://ani.gamer.com.tw/*"],
+			"js": ["content.js"],
+			"run_at": "document_idle",
+			"all_frames": true
+		}
+	]
+}
