@@ -1,0 +1,10 @@
+{
+	"extDescription": {
+		"message": "ani.gamer.com.tw の動画ページで、再生前の真っ黒な画面を、表紙（カバー）画像を背景にした表示へ差し替えます。",
+		"description": "拡張機能の説明（日本語）"
+	},
+	"extName": {
+		"message": "[B.M] 動畫瘋 カバー画像修正",
+		"description": "拡張機能名（日本語）"
+	}
+}

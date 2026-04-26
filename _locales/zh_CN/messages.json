@@ -1,0 +1,10 @@
+{
+	"extDescription": {
+		"message": "修正在动画疯（ani.gamer.com.tw）视频页，开播前纯黑画面，改以封面图作为背景。",
+		"description": "扩展功能简介（简体中文）"
+	},
+	"extName": {
+		"message": "[B.M] 动画疯 封面图修正",
+		"description": "扩展功能名称（简体中文）"
+	}
+}
