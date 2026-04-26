@@ -93,7 +93,7 @@
 
 ## 版本與多語系
 
-- **版本**：以 [`manifest.json`](manifest.json) 的 `version` 為準（單一真相來源）。
+- **版本**：以 [`manifest.json`](manifest.json) 的 `version` 為準。
 - **預設語系**：`zh_TW`（`default_locale`）。
 - **內建語系**：`zh_TW`、`zh_CN`、`ja_JP`、`en_US`（路徑為 `_locales/<code>/messages.json`）。實際顯示依瀏覽器語系與遞減規則。
 
