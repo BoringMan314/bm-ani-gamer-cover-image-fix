@@ -54,7 +54,7 @@
 
 ### 從 Chrome 線上應用程式商店（建議）
 
-請在 [Chrome Web Store](https://chromewebstore.google.com/) 搜尋 **「[B.M] 動畫瘋 封面圖修正」** 安裝。已有正式商品頁者，可改寫為與本系列他專案相同、附 **商店頁面** 直連之句型。
+請在 [Chrome Web Store](https://chromewebstore.google.com/) 搜尋 **「[\[B.M\] 動畫瘋 封面圖修正](https://chromewebstore.google.com/detail/bm-%E5%8B%95%E7%95%AB%E7%98%8B-%E5%B0%81%E9%9D%A2%E5%9C%96%E4%BF%AE%E6%AD%A3/ldmdghahgfgfmfafaaeipndagpojkpif?hl=zh-TW)」**，或點擊名稱從商店頁面安裝。
 
 ### 從原始碼載入（開發人員模式）
 
