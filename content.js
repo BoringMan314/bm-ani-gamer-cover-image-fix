@@ -140,7 +140,6 @@
 
 	function buildCssText(imageUrl) {
 		const u = JSON.stringify(imageUrl);
-		const r18Bg = `linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.72)), url(${u})`;
 		return `
 			#ani_video, #ani_video.video-js, #video-container video-js, #video-container .video-js,
 			.container-player video-js, .container-player .video-js, .videoframe video-js, .b-post video-js, .b-post .video-js {
@@ -150,8 +149,13 @@
 				background-position:center center !important;
 				background-repeat:no-repeat !important;
 			}
-			#ani_video .vjs-poster, #ani_video picture.vjs-poster, #video-container video-js .vjs-poster, #video-container video-js picture.vjs-poster {
-				z-index:2 !important;
+			#ani_video .vjs-poster, #ani_video picture.vjs-poster,
+			#video-container video-js .vjs-poster, #video-container video-js picture.vjs-poster,
+			.container-player video-js .vjs-poster, .container-player video-js picture.vjs-poster,
+			.videoframe video-js .vjs-poster, .videoframe video-js picture.vjs-poster,
+			.b-post video-js .vjs-poster, .b-post video-js picture.vjs-poster,
+			video-js .vjs-poster, video-js picture.vjs-poster {
+				display: none !important;
 			}
 			#ani_video:not(.vjs-has-started) video.vjs-tech, #ani_video:not(.vjs-has-started) .vjs-tech,
 			#video-container video-js:not(.vjs-has-started) video.vjs-tech, #video-container video-js:not(.vjs-has-started) .vjs-tech {
@@ -162,10 +166,11 @@
 				opacity:1 !important;
 			}
 			#ani_video .R18, #video-container video-js .R18, .container-player video-js .R18, .videoframe video-js .R18, .b-post video-js .R18, video-js .R18 {
-				background: ${r18Bg} !important;
-				background-size: cover, cover !important;
-				background-position: center center, center center !important;
-				background-repeat: no-repeat, no-repeat !important;
+				background-color: transparent !important;
+				background-image: url(${u}) !important;
+				background-size: cover !important;
+				background-position: center center !important;
+				background-repeat: no-repeat !important;
 			}`;
 	}
 
