@@ -56,20 +56,20 @@
 	function getEpisodeSpecificCoverFromDocument(doc) {
 		if (!doc) return '';
 		const base = doc.baseURI || document.baseURI;
-		const vc = doc.getElementById('video-container');
-		if (vc) {
-			const p = vc.getAttribute('data-video-poster');
-			if (p && p.trim()) {
-				const h = toAbs(p.trim(), base);
-				if (h) return h;
-			}
-		}
 		const v = getEpisodeVideoFromDocument(doc);
 		if (v) {
 			let p = (v.getAttribute('poster') || '').trim();
 			if (!p) p = (v.getAttribute('data-poster') || '').trim();
 			if (p) {
 				const h = toAbs(p, base);
+				if (h) return h;
+			}
+		}
+		const vc = doc.getElementById('video-container');
+		if (vc) {
+			const p = vc.getAttribute('data-video-poster');
+			if (p && p.trim()) {
+				const h = toAbs(p.trim(), base);
 				if (h) return h;
 			}
 		}
@@ -220,13 +220,12 @@
 		v.setAttribute('poster', url);
 	}
 
-	let mainVideoEventHooked = false;
+	let mainVideoHooked = null;
 	const ON_VIDEO = ['play', 'playing', 'pause', 'loadeddata', 'emptied', 'seeked', 'loadstart', 'ended'];
 	function hookMainVideoForPosterSync() {
-		if (mainVideoEventHooked) return;
 		const v = getMainVideo();
-		if (!v) return;
-		mainVideoEventHooked = true;
+		if (!v || mainVideoHooked === v) return;
+		mainVideoHooked = v;
 		for (let i = 0; i < ON_VIDEO.length; i++) {
 			v.addEventListener(ON_VIDEO[i], schedule, { passive: true });
 		}
@@ -266,17 +265,32 @@
 		repump++;
 		if (repump >= 24) clearInterval(repumpId);
 	}, 500);
+	const ATTR_POSTER = ['data-video-poster', 'poster', 'data-poster'];
 	if (document.body) {
-		new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+		new MutationObserver(schedule).observe(document.body, {
+			childList: true,
+			subtree: true,
+			attributes: true,
+			attributeFilter: ATTR_POSTER,
+		});
 	}
 	const vc0 = document.getElementById('video-container');
 	if (vc0) {
-		new MutationObserver(schedule).observe(vc0, { attributes: true, attributeFilter: ['data-video-poster'] });
+		new MutationObserver(schedule).observe(vc0, {
+			attributes: true,
+			attributeFilter: ATTR_POSTER,
+			subtree: true,
+		});
 	}
 	if (canReadTopDocument()) {
 		try {
 			const vct = window.top.document.getElementById('video-container');
-			if (vct) new MutationObserver(schedule).observe(vct, { attributes: true, attributeFilter: ['data-video-poster'] });
+			if (vct)
+				new MutationObserver(schedule).observe(vct, {
+					attributes: true,
+					attributeFilter: ATTR_POSTER,
+					subtree: true,
+				});
 		} catch (_) {}
 	}
 	const head = document.head;
@@ -289,4 +303,18 @@
 		});
 	}
 	window.addEventListener('pageshow', tick);
+	window.addEventListener('popstate', schedule, { passive: true });
+	(function hookHistory() {
+		if (hookHistory.done) return;
+		hookHistory.done = true;
+		for (const k of ['pushState', 'replaceState']) {
+			const orig = history[k];
+			if (typeof orig !== 'function') continue;
+			history[k] = function () {
+				const ret = orig.apply(this, arguments);
+				schedule();
+				return ret;
+			};
+		}
+	})();
 })();
