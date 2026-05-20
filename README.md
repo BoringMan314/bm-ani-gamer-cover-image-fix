@@ -3,6 +3,7 @@
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue)](https://developer.chrome.com/docs/extensions/mv3/)
 [![Site](https://img.shields.io/badge/site-ani.gamer.com.tw-5865F2)](https://ani.gamer.com.tw)
 [![GitHub](https://img.shields.io/badge/GitHub-bm--ani--gamer--cover--image--fix-181717?logo=github)](https://github.com/BoringMan314/bm-ani-gamer-cover-image-fix)
+[![GitHub all releases](https://img.shields.io/github/downloads/BoringMan314/bm-ani-gamer-cover-image-fix/total)](https://github.com/BoringMan314/bm-ani-gamer-cover-image-fix/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 適用於 [巴哈姆特動畫瘋](https://ani.gamer.com.tw)（`ani.gamer.com.tw`）的瀏覽器擴充功能：在影片播放頁將**開播前**播放器區域常見的**大面積純黑底**，改為以同一頁面所宣告之**封面圖**（以 `og:image` 等取得）作為**背景圖**；若 `<video>` 尚無 `poster` 屬性，一併補上，以減少全黑畫面。
