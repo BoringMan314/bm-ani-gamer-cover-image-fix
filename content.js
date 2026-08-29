@@ -1,6 +1,9 @@
 (function () {
 	'use strict';
 
+	document.documentElement.setAttribute('data-bm-ani-cover-standalone', '1');
+	if (document.documentElement.getAttribute('data-bm-ani-tool') === '1') return;
+
 	const STYLE_ID = 'bm-ani-gamer-cover-image-fix-style';
 	const POSTER_BASES = [
 		'#ani_video .vjs-poster',
