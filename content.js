@@ -5,6 +5,7 @@
 	if (document.documentElement.getAttribute('data-bm-ani-tool') === '1') return;
 
 	const STYLE_ID = 'bm-ani-gamer-cover-image-fix-style';
+	const POSTER_ORIG_ATTR = 'data-bm-ani-cover-image-fix-orig-poster';
 	const INJECTED_POSTER_ATTR = 'data-bm-ani-cover-image-fix-poster';
 	const INJECTED_EPISODE_ATTR = 'data-bm-ani-cover-image-fix-episode';
 	const PENDING_EPISODE_ATTR = 'data-bm-ani-cover-image-fix-pending-episode';
@@ -27,6 +28,10 @@
 
 	let deb = null;
 	let activeEpisodeKey = '';
+	let coverSuppressedEpisodeKey = '';
+	let transitionVideoAtStart = null;
+	let transitionSourceAtStart = '';
+	let transitionStartedAt = 0;
 	let activeCoverUrl = '';
 	const staleEpisodeCoverUrls = new Set();
 	let awaitingEpisodeCover = false;
@@ -310,9 +315,34 @@
 	function setVideoPoster(url, episodeKey) {
 		const v = getMainVideo();
 		if (!v) return;
+		if (!v.hasAttribute(POSTER_ORIG_ATTR)) {
+			v.setAttribute(POSTER_ORIG_ATTR, v.getAttribute('poster') || '');
+		} else {
+			const currentPoster = v.getAttribute('poster') || '';
+			const injectedPoster = v.getAttribute(INJECTED_POSTER_ATTR) || '';
+			if (currentPoster && currentPoster !== injectedPoster) {
+				v.setAttribute(POSTER_ORIG_ATTR, currentPoster);
+			}
+		}
 		if (v.getAttribute('poster') !== url) v.setAttribute('poster', url);
 		if (v.getAttribute(INJECTED_POSTER_ATTR) !== url) v.setAttribute(INJECTED_POSTER_ATTR, url);
 		if (v.getAttribute(INJECTED_EPISODE_ATTR) !== episodeKey) v.setAttribute(INJECTED_EPISODE_ATTR, episodeKey);
+	}
+
+	function restoreVideoPoster() {
+		let originalPoster = '';
+		let restored = false;
+		document.querySelectorAll(`video[${POSTER_ORIG_ATTR}]`).forEach((v) => {
+			const original = v.getAttribute(POSTER_ORIG_ATTR) || '';
+			if (original) v.setAttribute('poster', original);
+			else v.removeAttribute('poster');
+			originalPoster = original;
+			restored = true;
+			v.removeAttribute(POSTER_ORIG_ATTR);
+			v.removeAttribute(INJECTED_POSTER_ATTR);
+			v.removeAttribute(INJECTED_EPISODE_ATTR);
+		});
+		if (restored) tryVideojsPoster(originalPoster);
 	}
 
 	let mainVideoHooked = null;
@@ -322,6 +352,9 @@
 		if (!v || mainVideoHooked === v) return;
 		mainVideoHooked = v;
 		for (let i = 0; i < ON_VIDEO.length; i++) {
+			if (ON_VIDEO[i] === 'playing') {
+				v.addEventListener(ON_VIDEO[i], stopCoverAfterPlaybackStarts, { passive: true });
+			}
 			v.addEventListener(ON_VIDEO[i], schedule, { passive: true });
 		}
 	}
@@ -365,10 +398,22 @@
 			}`;
 	}
 
-	function beginEpisodeTransition(episodeKey) {
+	function beginEpisodeTransition(episodeKey, allowCurrentCoverReuse = false) {
 		if (!episodeKey || episodeKey === activeEpisodeKey) return;
-		if (activeCoverUrl) staleEpisodeCoverUrls.add(activeCoverUrl);
-		if (pendingCoverCandidate) staleEpisodeCoverUrls.add(pendingCoverCandidate);
+		coverSuppressedEpisodeKey = '';
+		if (activeCoverUrl) {
+			if (allowCurrentCoverReuse) staleEpisodeCoverUrls.delete(activeCoverUrl);
+			else staleEpisodeCoverUrls.add(activeCoverUrl);
+		}
+		if (pendingCoverCandidate) {
+			if (allowCurrentCoverReuse) staleEpisodeCoverUrls.delete(pendingCoverCandidate);
+			else staleEpisodeCoverUrls.add(pendingCoverCandidate);
+		}
+		transitionVideoAtStart = getMainVideo();
+		transitionSourceAtStart = transitionVideoAtStart
+			? transitionVideoAtStart.currentSrc || transitionVideoAtStart.src || ''
+			: '';
+		transitionStartedAt = Date.now();
 		activeEpisodeKey = episodeKey;
 		activeCoverUrl = '';
 		awaitingEpisodeCover = true;
@@ -377,10 +422,35 @@
 		installWaitingStyle();
 	}
 
+	function hasActiveEpisodePlayback() {
+		const video = getMainVideo();
+		if (!video || video.paused || video.ended || video.currentTime <= 0) return false;
+		if (!transitionVideoAtStart) return true;
+		const source = video.currentSrc || video.src || '';
+		return (
+			video !== transitionVideoAtStart ||
+			(source && source !== transitionSourceAtStart) ||
+			(video.currentTime < 1 && Date.now() - transitionStartedAt > 800)
+		);
+	}
+
+	function stopCoverAfterPlaybackStarts() {
+		if (!activeEpisodeKey) return;
+		if (!hasActiveEpisodePlayback()) return;
+		coverSuppressedEpisodeKey = activeEpisodeKey;
+		clearInjectedStyle();
+		restoreVideoPoster();
+	}
+
 	function tick() {
 		if (!shouldApplyPage()) {
 			clearInjectedStyle();
+			restoreVideoPoster();
 			activeEpisodeKey = '';
+			coverSuppressedEpisodeKey = '';
+			transitionVideoAtStart = null;
+			transitionSourceAtStart = '';
+			transitionStartedAt = 0;
 			activeCoverUrl = '';
 			staleEpisodeCoverUrls.clear();
 			awaitingEpisodeCover = false;
@@ -392,6 +462,9 @@
 		if (pending && locationEpisodeKey !== pending.key) return;
 		if (activeEpisodeKey && episodeKey !== activeEpisodeKey) beginEpisodeTransition(episodeKey);
 		if (!activeEpisodeKey) activeEpisodeKey = episodeKey;
+		hookMainVideoForPosterSync();
+		if (hasActiveEpisodePlayback()) stopCoverAfterPlaybackStarts();
+		if (coverSuppressedEpisodeKey === episodeKey) return;
 		const url = getCoverImageUrl(episodeKey, '', !awaitingEpisodeCover);
 		if (!url) {
 			pendingCoverCandidate = '';
@@ -497,7 +570,7 @@
 		const targetEpisodeKey = getEpisodeKeyFromUrl(link.href);
 		if (targetEpisodeKey) {
 			setPendingEpisodeIntent(targetEpisodeKey);
-			beginEpisodeTransition(targetEpisodeKey);
+			beginEpisodeTransition(targetEpisodeKey, link.hasAttribute('data-ani-video-sn'));
 		}
 	}, true);
 	(function hookHistory() {
